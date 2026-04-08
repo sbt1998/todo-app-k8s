@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_DB
+          value: tododb
+        - name: POSTGRES_USER
+          value: todouser
+        - name: POSTGRES_PASSWORD
+          value: todopass
+        ports:
+        - containerPort: 5432
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: db
+  ports:
+  - port: 5432
+    targetPort: 5432

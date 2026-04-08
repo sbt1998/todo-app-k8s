@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build: ./app
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: tododb
+      DB_USER: todouser
+      DB_PASS: todopass
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: tododb
+      POSTGRES_USER: todouser
+      POSTGRES_PASSWORD: todopass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todouser -d tododb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
