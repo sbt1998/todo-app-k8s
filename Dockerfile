@@ -1,29 +1,36 @@
-# VULNERABILIDAD INTRODUCIDA: Imagen base 'latest' sin versión fija
-# Tipo: Unpinned base image tag
-# Severidad esperada: MEDIUM
-FROM python:latest
+# CORRECCIÓN 1: Imagen base con versión fija en lugar de 'latest'
+# Vulnerabilidad original: Image Version Using 'latest' (MEDIUM)
+# Estado: CORREGIDA
+FROM python:3.11-slim
 
-# VULNERABILIDAD INTRODUCIDA: Ejecutar como root
-# Tipo: Container running as root user
-# Severidad esperada: HIGH
-USER root
+# CORRECCIÓN 2: Usuario no root
+# Vulnerabilidad original: Last User Is 'root' (HIGH)
+# Estado: CORREGIDA
+RUN useradd -m appuser
 
 WORKDIR /app
 
-# VULNERABILIDAD INTRODUCIDA: Contraseña hardcodeada
-# Tipo: Sensitive data exposed in environment variable
-# Severidad esperada: HIGH
-ENV DB_PASSWORD="supersecreta123"
-ENV SECRET_KEY="clave-super-secreta-hardcodeada"
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# VULNERABILIDAD INTRODUCIDA: Puerto SSH expuesto
-# Tipo: Sensitive port exposed
-# Severidad esperada: MEDIUM
-EXPOSE 22
+COPY app.py .
+
+# CORRECCIÓN 3: Contraseña eliminada del Dockerfile
+# Vulnerabilidad original: Passwords And Secrets - Generic Secret (HIGH)
+# Estado: CORREGIDA - las credenciales se inyectan en tiempo de ejecución
+# ENV DB_PASSWORD ya no está aquí
+
+# CORRECCIÓN 4: Puerto SSH eliminado
+# Vulnerabilidad original: Exposing Port 22 SSH (LOW)
+# Estado: CORREGIDA
 EXPOSE 5000
 
-RUN apt-get update && apt-get install -y curl wget
+# CORRECCIÓN 5: Healthcheck añadido
+# Vulnerabilidad original: Healthcheck Instruction Missing (LOW)
+# Estado: CORREGIDA
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:5000/ || exit 1
 
-COPY . .
+USER appuser
 
 CMD ["python", "app.py"]

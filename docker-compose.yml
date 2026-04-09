@@ -4,20 +4,30 @@ services:
   app:
     build: ./app
     ports:
-      - "5000:5000"
+      # CORRECCIÓN 6: Puerto vinculado a interfaz específica
+      # Vulnerabilidad original: Container Traffic Not Bound To Host Interface (MEDIUM)
+      # Estado: CORREGIDA
+      - "127.0.0.1:5000:5000"
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: tododb
       DB_USER: todouser
-      # VULNERABILIDAD INTRODUCIDA 4: Contraseña hardcodeada en docker-compose
-      # Tipo: Sensitive Information Exposure
-      # Severidad esperada: HIGH
-      DB_PASS: todopass
-    # VULNERABILIDAD INTRODUCIDA 5: Contenedor con modo privilegiado
-    # Tipo: Privileged container
-    # Severidad esperada: HIGH
-    privileged: true
+      # CORRECCIÓN 7: Contraseña movida a variable de entorno externa
+      # Vulnerabilidad original: Passwords And Secrets - Generic Password (HIGH)
+      # Estado: CORREGIDA - usar .env file o variable del sistema
+      DB_PASS: ${DB_PASS}
+    # CORRECCIÓN 8: Modo privilegiado eliminado
+    # Vulnerabilidad original: Privileged Containers Enabled (HIGH)
+    # Estado: CORREGIDA
+    # privileged: true  ← eliminado
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
     depends_on:
       db:
         condition: service_healthy
@@ -28,16 +38,23 @@ services:
     environment:
       POSTGRES_DB: tododb
       POSTGRES_USER: todouser
-      # VULNERABILIDAD INTRODUCIDA 6: Contraseña root hardcodeada
-      # Tipo: Sensitive Information Exposure
-      # Severidad esperada: HIGH
-      POSTGRES_PASSWORD: todopass
-    # VULNERABILIDAD INTRODUCIDA 7: Montar socket de Docker (riesgo de escape del contenedor)
-    # Tipo: Docker socket mounted
-    # Severidad esperada: CRITICAL
+      # CORRECCIÓN 9: Contraseña desde variable externa
+      # Vulnerabilidad original: Passwords And Secrets - Generic Password (HIGH)
+      # Estado: CORREGIDA
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # CORRECCIÓN 10: Docker socket eliminado
+    # Vulnerabilidad original: Docker Socket Mounted In Container (HIGH)
+    # Vulnerabilidad original: Volume Has Sensitive Host Directory (HIGH)
+    # Estado: CORREGIDAS
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - postgres_data:/var/lib/postgresql/data
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U todouser -d tododb"]
       interval: 5s

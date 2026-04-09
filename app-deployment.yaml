@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -11,10 +12,16 @@ spec:
     metadata:
       labels:
         app: todo
+      annotations:
+        # CORRECCIÓN 11: AppArmor profile configurado
+        # Vulnerabilidad original: Missing AppArmor Profile (LOW)
+        # Estado: CORREGIDA
+        container.apparmor.security.beta.kubernetes.io/app: runtime/default
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: app
-        image: todo-app:latest
+        image: todo-app:1.0
         imagePullPolicy: Never
         env:
         - name: DB_HOST
@@ -36,6 +43,36 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "100m"
+        # CORRECCIÓN 12: Security context configurado
+        # Vulnerabilidades originales:
+        # - Pod or Container Without Security Context (LOW) → CORREGIDA
+        # - Container Running As Root (MEDIUM) → CORREGIDA
+        # - Privilege Escalation Allowed (HIGH) → CORREGIDA
+        # - NET_RAW Capabilities Not Being Dropped (MEDIUM) → CORREGIDA
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        # CORRECCIÓN 13: Readiness y Liveness probes
+        # Vulnerabilidades originales:
+        # - Readiness Probe Is Not Configured (MEDIUM) → CORREGIDA
+        # - Liveness Probe Is Not Defined (INFO) → CORREGIDA
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service
