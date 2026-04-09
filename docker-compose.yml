@@ -10,7 +10,14 @@ services:
       DB_PORT: 5432
       DB_NAME: tododb
       DB_USER: todouser
+      # VULNERABILIDAD INTRODUCIDA 4: Contraseña hardcodeada en docker-compose
+      # Tipo: Sensitive Information Exposure
+      # Severidad esperada: HIGH
       DB_PASS: todopass
+    # VULNERABILIDAD INTRODUCIDA 5: Contenedor con modo privilegiado
+    # Tipo: Privileged container
+    # Severidad esperada: HIGH
+    privileged: true
     depends_on:
       db:
         condition: service_healthy
@@ -21,8 +28,15 @@ services:
     environment:
       POSTGRES_DB: tododb
       POSTGRES_USER: todouser
+      # VULNERABILIDAD INTRODUCIDA 6: Contraseña root hardcodeada
+      # Tipo: Sensitive Information Exposure
+      # Severidad esperada: HIGH
       POSTGRES_PASSWORD: todopass
+    # VULNERABILIDAD INTRODUCIDA 7: Montar socket de Docker (riesgo de escape del contenedor)
+    # Tipo: Docker socket mounted
+    # Severidad esperada: CRITICAL
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U todouser -d tododb"]
