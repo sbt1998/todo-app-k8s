@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: db
-  namespace: default
 spec:
   replicas: 1
   selector:
@@ -12,10 +11,7 @@ spec:
     metadata:
       labels:
         app: db
-      annotations:
-        # Estado: CORREGIDA
     spec:
-      automountServiceAccountToken: false
       containers:
       - name: db
         image: postgres:15-alpine
@@ -36,30 +32,6 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-        # CORRECCIÓN 15: Security context configurado
-        # Vulnerabilidades originales:
-        # - Pod or Container Without Security Context (LOW) → CORREGIDA
-        # - Container Running As Root (MEDIUM) → CORREGIDA
-        # - Privilege Escalation Allowed (HIGH) → CORREGIDA
-        # - NET_RAW Capabilities Not Being Dropped (MEDIUM) → CORREGIDA
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 999
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
-        readinessProbe:
-          exec:
-            command: ["pg_isready", "-U", "todouser", "-d", "tododb"]
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          exec:
-            command: ["pg_isready", "-U", "todouser", "-d", "tododb"]
-          initialDelaySeconds: 15
-          periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service
