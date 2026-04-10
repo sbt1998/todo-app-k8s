@@ -13,10 +13,7 @@ spec:
       labels:
         app: todo
       annotations:
-        # CORRECCIÓN 11: AppArmor profile configurado
-        # Vulnerabilidad original: Missing AppArmor Profile (LOW)
         # Estado: CORREGIDA
-        container.apparmor.security.beta.kubernetes.io/app: runtime/default
     spec:
       automountServiceAccountToken: false
       containers:
