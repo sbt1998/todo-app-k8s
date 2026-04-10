@@ -1,4 +1,4 @@
-cat > /workspaces/todo-app-docker/start-k8s.sh << 'EOF'
+cat > /workspaces/todo-app-k8s/start.sh << 'EOF'
 #!/bin/bash
 set -e
 
@@ -61,5 +61,4 @@ echo "✅ ¡Todo listo! La app está corriendo en Kubernetes."
 echo "   Para ver el escalado en tiempo real ejecuta:"
 echo "   watch -n 5 kubectl get hpa"
 EOF
-chmod +x /workspaces/todo-app-docker/start-k8s.sh
-echo "Hecho"
+chmod +x /workspaces/todo-app-k8s/start.sh && echo "Hecho"
