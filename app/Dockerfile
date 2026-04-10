@@ -1,12 +1,8 @@
-# VULNERABILIDAD INTRODUCIDA 1: Imagen base con tag 'latest' en lugar de versión fija
-# Tipo: Unpinned base image
-# Severidad esperada: MEDIUM
-FROM python:latest
+# Imagen base con versión fija
+FROM python:3.11-slim
 
-# VULNERABILIDAD INTRODUCIDA 2: Ejecutar como root (no se crea usuario sin privilegios)
-# Tipo: Container running as root
-# Severidad esperada: HIGH
-USER root
+# Usuario no root
+RUN useradd -m appuser
 
 WORKDIR /app
 
@@ -15,10 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-# VULNERABILIDAD INTRODUCIDA 3: Contraseña hardcodeada en variable de entorno
-# Tipo: Sensitive Information Exposure
-# Severidad esperada: HIGH
-ENV DB_PASS="todopass"
+USER appuser
 
 EXPOSE 5000
 
